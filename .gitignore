@@ -1,0 +1,15 @@
+# Ignore log files
+*.log
+
+# Ignore compiled JAR files
+*.jar
+
+# Ignore generated files from IDEs
+*.idea/
+*.vscode/
+*.project
+*.classpath
+*.settings/
+
+# Ignore MacOS specific files
+.DS_Store
