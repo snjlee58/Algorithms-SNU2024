@@ -4,5 +4,5 @@ k_mer=$1
 shift
 input_file=$*
 
-javac KMerCounter.java
+# javac KMerCounter.java
 java KMerCounter "$k_mer" "$input_file"

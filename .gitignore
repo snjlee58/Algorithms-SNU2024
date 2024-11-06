@@ -16,3 +16,9 @@
 
 # Ignore testcase files
 *.fna
+
+# Ignore submission zip files
+*.zip
+
+#Ignore txt files
+*.txt
