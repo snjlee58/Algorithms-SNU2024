@@ -19,9 +19,10 @@ public class KMerCounter {
 
             // Sort and write k-mers with counts directly to the file
             try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputFile))) {
-                sortAndWriteOutput(kmerCounts, k, bw);
+                sortAndWriteOutput3(kmerCounts, k, bw);
             }
         } catch (IOException e) {
+            System.err.println("Error: " + e.getMessage()); // DELETE
             return;
         }
     }
@@ -92,12 +93,42 @@ public class KMerCounter {
         }
     }
 
-    // Method to sort the k-mers and write the output lines
-    private static void sortAndWriteOutput(Map<Long, Integer> kmerCounts, int k, BufferedWriter bw) throws IOException {
-        List<Map.Entry<Long, Integer>> kmerList = new ArrayList<>(kmerCounts.entrySet());
+    // Method to sort the k-mers (using PriorityQueue) and write the output lines
+    private static void sortAndWriteOutput3(Map<Long, Integer> kmerCounts, int k, BufferedWriter bw) throws IOException {
+        // Edge case: if no kmers were counted, return without writing anything
+        if (kmerCounts.isEmpty()) {
+            return; // Nothing to write
+        }
+        
+        // Step 1: Use a PriorityQueue to find the minimum count needed for the top 100 ranks
+        PriorityQueue<Map.Entry<Long, Integer>> topKmerHeap = new PriorityQueue<>(100, (a, b) -> {
+            int countComparison = a.getValue().compareTo(b.getValue());
+            if (countComparison == 0) {
+                return Long.compare(b.getKey(), a.getKey());
+            }
+            return countComparison;
+        });
 
-        // Sort the list by count (descending), then by k-mer value (alphabetically)
-        kmerList.sort((a, b) -> {
+        for (Map.Entry<Long, Integer> entry : kmerCounts.entrySet()) {
+            topKmerHeap.offer(entry);
+            if (topKmerHeap.size() > 100) {
+                topKmerHeap.poll(); // Keep only the top 100 entries
+            }
+        }
+
+        // Step 2: Find the minimum count required for the top 100 ranks
+        int thresholdCount = topKmerHeap.peek().getValue();
+
+        // Step 3: Filter entries that meet or exceed the threshold count
+        List<Map.Entry<Long, Integer>> filteredKmers = new ArrayList<>();
+        for (Map.Entry<Long, Integer> entry : kmerCounts.entrySet()) {
+            if (entry.getValue() >= thresholdCount) {
+                filteredKmers.add(entry);
+            }
+        }
+
+        // Step 4: Sort the filtered entries by count (descending), then by k-mer (alphabetically)
+        filteredKmers.sort((a, b) -> {
             int countComparison = b.getValue().compareTo(a.getValue());
             if (countComparison == 0) {
                 return Long.compare(a.getKey(), b.getKey());
@@ -105,18 +136,25 @@ public class KMerCounter {
             return countComparison;
         });
 
-        // Write the top 100 k-mers (or more in case of ties) directly to the file
-        int rank = 1;
-        int lastCount = -1;
-        for (Map.Entry<Long, Integer> entry : kmerList) {
-            if (rank > 100 && entry.getValue() != lastCount) {
-                break; // Stop if we've listed all ties for the 100th rank
+        // Step 5: Write the sorted entries to the file, including all ties at the 100th rank
+        int writtenLines = 0;
+        for (int i = 0; i < filteredKmers.size(); i++) {
+            Map.Entry<Long, Integer> entry = filteredKmers.get(i);
+
+            // Stop if we've reached beyond 100 lines and are past the 100th rank's count
+            if (writtenLines >= 100 && entry.getValue() < thresholdCount) {
+                break;
             }
+
+            // Write the k-mer and its count
             String line = decodeKmer(entry.getKey(), k) + "," + entry.getValue();
             bw.write(line);
-            bw.newLine();
-            lastCount = entry.getValue();
-            rank++;
+            writtenLines++;
+
+            // Add newline if it's not the last line to be written
+            if (i < filteredKmers.size() - 1 && (writtenLines < 100 || filteredKmers.get(i + 1).getValue() == thresholdCount)) {
+                bw.newLine();
+            }
         }
     }
 

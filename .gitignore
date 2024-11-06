@@ -13,3 +13,6 @@
 
 # Ignore MacOS specific files
 .DS_Store
+
+# Ignore testcase files
+*.fna
