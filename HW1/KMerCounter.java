@@ -19,10 +19,9 @@ public class KMerCounter {
 
             // Sort and write k-mers with counts directly to the file
             try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputFile))) {
-                sortAndWriteOutput3(kmerCounts, k, bw);
+                sortAndWriteOutput(kmerCounts, k, bw);
             }
         } catch (IOException e) {
-            System.err.println("Error: " + e.getMessage()); // DELETE
             return;
         }
     }
@@ -52,33 +51,32 @@ public class KMerCounter {
         }
     }
 
-    // Method to encode a single nucleotide using 2 bits
+    // Encoding scheme for a single nucleotide using 2 bits
     private static int encodeNucleotide(char nucleotide) {
         switch (nucleotide) {
-            case 'A': return 0b00; // 00 in binary
-            case 'C': return 0b01; // 01 in binary
-            case 'G': return 0b10; // 10 in binary
-            case 'T': return 0b11; // 11 in binary
-            // Skip ambiguous characters
+            case 'A': return 0b00; // Binary 00
+            case 'C': return 0b01; // Binary 01
+            case 'G': return 0b10; // Binary 10
+            case 'T': return 0b11; // Binary 11
             default: return -1; // Return -1 for invalid nucleotides
         }
     }
 
     // Count k-mers in a DNA sequence using bitwise operations
     private static void countKmers(String sequence, int k, Map<Long, Integer> kmerCounts) {
-        // Remove 'N' characters from the sequence
-        String cleanedSequence = sequence.replaceAll("[^ACGT]", ""); // Keep only A, C, G, T
+        // Remove invalid characters from the sequence
+        String cleanedSequence = sequence.replaceAll("[^ACGT]", "");
 
         // Check if the cleaned sequence is long enough
         if (cleanedSequence.length() < k) return;
 
-        long kmer = 0; // FIXME: does this need to be long?
+        long kmer = 0;
         int bitLength = 2 * k; // Each nucleotide is represented by 2 bits
 
         // Initialize the first k-mer
         for (int i = 0; i < k; i++) {
             int encoded = encodeNucleotide(cleanedSequence.charAt(i));
-            if (encoded == -1) return; // Skip this k-mer if any character is invalid
+            if (encoded == -1) return; // Skip invalid nucleotides
             kmer = (kmer << 2) | encoded;
         }
         kmerCounts.put(kmer, kmerCounts.getOrDefault(kmer, 0) + 1);
@@ -87,20 +85,20 @@ public class KMerCounter {
         long mask = (1L << bitLength) - 1; // Mask to keep only the lower bitLength bits
         for (int i = k; i < cleanedSequence.length(); i++) {
             int encoded = encodeNucleotide(cleanedSequence.charAt(i));
-            if (encoded == -1) continue; // Skip invalid nucleotides
+            if (encoded == -1) continue; 
             kmer = ((kmer << 2) | encoded) & mask;
             kmerCounts.put(kmer, kmerCounts.getOrDefault(kmer, 0) + 1);
         }
     }
 
     // Method to sort the k-mers (using PriorityQueue) and write the output lines
-    private static void sortAndWriteOutput3(Map<Long, Integer> kmerCounts, int k, BufferedWriter bw) throws IOException {
+    private static void sortAndWriteOutput(Map<Long, Integer> kmerCounts, int k, BufferedWriter bw) throws IOException {
         // Edge case: if no kmers were counted, return without writing anything
         if (kmerCounts.isEmpty()) {
-            return; // Nothing to write
+            return;
         }
         
-        // Step 1: Use a PriorityQueue to find the minimum count needed for the top 100 ranks
+        // Step 1: Use PriorityQueue to find the minimum count needed for the top 100 ranks
         PriorityQueue<Map.Entry<Long, Integer>> topKmerHeap = new PriorityQueue<>(100, (a, b) -> {
             int countComparison = a.getValue().compareTo(b.getValue());
             if (countComparison == 0) {
@@ -127,7 +125,7 @@ public class KMerCounter {
             }
         }
 
-        // Step 4: Sort the filtered entries by count (descending), then by k-mer (alphabetically)
+        // Step 4: Sort the filtered entries by descending order of count, then by ascending order alphabetically
         filteredKmers.sort((a, b) -> {
             int countComparison = b.getValue().compareTo(a.getValue());
             if (countComparison == 0) {
@@ -136,7 +134,7 @@ public class KMerCounter {
             return countComparison;
         });
 
-        // Step 5: Write the sorted entries to the file, including all ties at the 100th rank
+        // Step 5: Write the sorted entries to the output file, including all ties at the 100th rank
         int writtenLines = 0;
         for (int i = 0; i < filteredKmers.size(); i++) {
             Map.Entry<Long, Integer> entry = filteredKmers.get(i);
@@ -158,7 +156,7 @@ public class KMerCounter {
         }
     }
 
-    // Method to decode a k-mer from its bit representation to a string
+    // Decoding scheme for k-mer from bit representation to a string
     private static String decodeKmer(long kmer, int k) {
         StringBuilder kmerString = new StringBuilder();
         for (int i = k - 1; i >= 0; i--) {
