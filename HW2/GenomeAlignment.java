@@ -20,11 +20,20 @@ public class GenomeAlignment {
             Map<String, Integer> genome2Kmers = parseKmerFile(genome2KmerFile);
 
             // Step 2: Filter k-mers
-            int genome1Size = getGenomeSize(genome1File); // DEBUG: test
+            int genome1Size = getGenomeSize(genome1File); // DEBUG: adjust function, theres only 1 header line in fasta files
             int genome2Size = getGenomeSize(genome2File);
             int alpha = 5; // Adjust as needed
             List<String> filteredGenome1KMers = KMerFilter.filterKMers(genome1Kmers, k, genome1Size, alpha);
             List<String> filteredGenome2KMers = KMerFilter.filterKMers(genome2Kmers, k, genome2Size, alpha);
+
+            // Step 3: Parse genome sequences -> get sequence as string
+            String genome1 = readGenome(genome1File);
+            String genome2 = readGenome(genome2File);
+
+            // Step 4: Find k-mer positions
+            Map<String, List<Integer>> genome1Positions = KMerLocator.findKMerPositions(genome1, filteredGenome1KMers);
+            Map<String, List<Integer>> genome2Positions = KMerLocator.findKMerPositions(genome2, filteredGenome2KMers);
+
         } catch (Exception e) {
             e.printStackTrace();
         }         
@@ -60,6 +69,20 @@ public class GenomeAlignment {
 
         reader.close();
         return genomeSize;
+    }
+
+    // Step 3: Parse genome sequence
+    private static String readGenome(String filename) throws IOException {
+        StringBuilder genome = new StringBuilder();
+        BufferedReader br = new BufferedReader(new FileReader(filename));
+        String line;
+        while ((line = br.readLine()) != null) {
+            if (!line.startsWith(">")) { // Ignore FASTA headers
+                genome.append(line.trim());
+            }
+        }
+        br.close();
+        return genome.toString();
     }
 
 }
