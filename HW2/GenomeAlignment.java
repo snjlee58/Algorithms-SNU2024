@@ -20,9 +20,9 @@ public class GenomeAlignment {
             Map<String, Integer> genome2Kmers = parseKmerFile(genome2KmerFile);
 
             // Step 2: Filter k-mers
-            int genome1Size = (int) new File(genome1File).length(); // Approx genome size
-            int genome2Size = (int) new File(genome2File).length(); // Approx genome size
-            double alpha = 5.0; // Adjust as needed
+            int genome1Size = getGenomeSize(genome1File); // DEBUG: test
+            int genome2Size = getGenomeSize(genome2File);
+            int alpha = 5; // Adjust as needed
             List<String> filteredGenome1KMers = KMerFilter.filterKMers(genome1Kmers, k, genome1Size, alpha);
             List<String> filteredGenome2KMers = KMerFilter.filterKMers(genome2Kmers, k, genome2Size, alpha);
         } catch (Exception e) {
@@ -44,6 +44,22 @@ public class GenomeAlignment {
         }
         br.close();
         return kmerCounts;
+    }
+
+    // Function to get genome size from fasta file (total number of non-header characters or nucleotides in the file)
+    public static int getGenomeSize(String fastaFilePath) throws IOException {
+        int genomeSize = 0;
+        BufferedReader reader = new BufferedReader(new FileReader(fastaFilePath));
+        String line;
+
+        while ((line = reader.readLine()) != null) {
+            if (!line.startsWith(">")) { // Skip header lines
+                genomeSize += line.trim().length(); // Add the length of the nucleotide sequence
+            }
+        }
+
+        reader.close();
+        return genomeSize;
     }
 
 }

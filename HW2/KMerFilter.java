@@ -1,15 +1,14 @@
 import java.util.*;
 
 public class KMerFilter {
-    public static List<String> filterKMers(Map<String, Integer> kmerCounts, int k, int genomeSize, double alpha) {
+    public static List<String> filterKMers(Map<String, Integer> kmerCounts, int k, int genomeSize, int alpha) {
         List<String> filteredKMers = new ArrayList<>();
         Set<String> selectedKMers = new HashSet<>();
         double threshold = alpha * genomeSize / Math.pow(4, k);
-        
+
         for (Map.Entry<String, Integer> entry : kmerCounts.entrySet()) {
             String kmer = entry.getKey();
             int count = entry.getValue();
-            System.out.println(kmer + ": " + count);
             
             // Exclude too frequent kmers
             if (count > threshold) continue; 
@@ -25,6 +24,7 @@ public class KMerFilter {
             if (!overlapping) {
                 filteredKMers.add(kmer);
                 selectedKMers.add(kmer);
+                System.out.println(kmer + ": " + count);
             }
         }
         return filteredKMers;
