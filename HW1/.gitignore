@@ -1,22 +1,3 @@
-# Ignore class files
-*.class
-
-# Ignore log files
-*.log
-
-# Ignore compiled JAR files
-*.jar
-
-# Ignore generated files from IDEs
-*.idea/
-*.vscode/
-*.project
-*.classpath
-*.settings/
-
-# Ignore MacOS specific files
-.DS_Store
-
 # Ignore other unnecessary files
 2024Alg_server_id.xlsx
 202016634.txt
