@@ -23,5 +23,6 @@
 # Ignore submission zip files
 *.zip
 
-#Ignore txt files
+#Ignore txt and .csv files (result generation)
 *.txt
+*.csv

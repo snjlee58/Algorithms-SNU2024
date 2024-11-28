@@ -5,7 +5,6 @@ public class KMerFilter {
         List<String> filteredKMers = new ArrayList<>();
         Set<String> selectedKMers = new HashSet<>();
         double threshold = alpha * genomeSize / Math.pow(4, k);
-
         for (Map.Entry<String, Integer> entry : kmerCounts.entrySet()) {
             String kmer = entry.getKey();
             int count = entry.getValue();
@@ -24,7 +23,6 @@ public class KMerFilter {
             if (!overlapping) {
                 filteredKMers.add(kmer);
                 selectedKMers.add(kmer);
-                System.out.println(kmer + ": " + count);
             }
         }
         return filteredKMers;

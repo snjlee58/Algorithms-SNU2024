@@ -13,26 +13,41 @@ public class GenomeAlignment {
         String genome2KmerFile = args[2];
         String genome1File = args[3];
         String genome2File = args[4];
+        String genome1Name = "genome1"; // FIXME: parse from genome1File
+        String genome2Name = "genome2"; // FIXME: parse from genome2File
 
         try {
-            // Step 1: Parse k-mer files
+            // Step 1: Frequent k-mer 추출 (예시: k=3)
             Map<String, Integer> genome1Kmers = parseKmerFile(genome1KmerFile);
             Map<String, Integer> genome2Kmers = parseKmerFile(genome2KmerFile);
 
-            // Step 2: Filter k-mers
-            int genome1Size = getGenomeSize(genome1File); // DEBUG: adjust function, theres only 1 header line in fasta files
-            int genome2Size = getGenomeSize(genome2File);
-            int alpha = 5; // Adjust as needed
+            // Step 2: k-mer 필터링
+            // Parse genome sequences -> get sequence as string
+            String genome1 = readGenome(genome1File);
+            String genome2 = readGenome(genome2File);
+            // Genome size
+            int genome1Size = genome1.length();
+            int genome2Size = genome2.length();
+            int alpha = 5; // FIX: Adjust as needed
             List<String> filteredGenome1KMers = KMerFilter.filterKMers(genome1Kmers, k, genome1Size, alpha);
             List<String> filteredGenome2KMers = KMerFilter.filterKMers(genome2Kmers, k, genome2Size, alpha);
 
-            // Step 3: Parse genome sequences -> get sequence as string
-            String genome1 = readGenome(genome1File);
-            String genome2 = readGenome(genome2File);
+            // Step 3: k-mer의 발생 위치 검색
+            /*
+             */
+            // FIXME: change to 
+            List<Kmer> genome1KmerPositions = KMerLocator.findKMerPositions(genome1, filteredGenome1KMers, k);
+            List<Kmer> genome2KmerPositions = KMerLocator.findKMerPositions(genome2, filteredGenome2KMers, k);
 
-            // Step 4: Find k-mer positions
-            Map<String, List<Integer>> genome1Positions = KMerLocator.findKMerPositions(genome1, filteredGenome1KMers);
-            Map<String, List<Integer>> genome2Positions = KMerLocator.findKMerPositions(genome2, filteredGenome2KMers);
+            // for (Kmer kmer : genome1KmerPositions) {
+            //     System.out.println(kmer.value + "|" + kmer.position);
+            // }
+
+            // // Step 4: Dynamic Programming으로 LCS 계산
+            // List<Kmer> lcs = LCS.findLCS(genome1KmerPositions, genome2KmerPositions);
+
+            // // Step 5: 결과물 저장
+            // saveResults(studentId, genome1Name, genome2Name, k, lcs);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -50,6 +65,8 @@ public class GenomeAlignment {
             String kmer = parts[0];
             int count = Integer.parseInt(parts[1]);
             kmerCounts.put(kmer, count);
+
+            // System.out.println(kmer + count);
         }
         br.close();
         return kmerCounts;
@@ -85,4 +102,31 @@ public class GenomeAlignment {
         return genome.toString();
     }
 
+     // Step 5: Method to save results to a file
+    public static void saveResults(String studentId, String genome1Name, String genome2Name, int k, List<Kmer> lcs) throws IOException {
+        // Save LCS sequence as a text file
+        String lcsFile = studentId + "_" + k + "_" + genome1Name + "_" + genome2Name + "_LCS.txt";
+        try (FileWriter writer = new FileWriter(lcsFile)) {
+            StringBuilder lcsSequence = new StringBuilder();
+            for (Kmer kmer : lcs) {
+                lcsSequence.append(kmer.value).append("-");
+            }
+            // Remove trailing hyphen
+            if (lcsSequence.length() > 0) {
+                lcsSequence.setLength(lcsSequence.length() - 1);
+            }
+            writer.write(lcsSequence.toString());
+        }
+
+        // Save LCS k-mers and positions to a CSV file
+        String outputFile = studentId + "_" + k + "_" + genome1Name + "_" + genome2Name + "_LCS_positions.csv";
+        // try (FileWriter writer = new FileWriter(outputFile)) {
+        //     writer.write("LCS k-mer,Position\n");
+        //     for (Kmer kmer : lcs) {
+        //         writer.write(kmer.value + "," + kmer.position + "\n");
+        //     }
+        // }
+
+    }
+    
 }

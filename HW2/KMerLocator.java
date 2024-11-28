@@ -1,18 +1,20 @@
 import java.util.*;
 
 public class KMerLocator {
-    public static Map<String, List<Integer>> findKMerPositions(String genome, List<String> kMers) {
-        Map<String, List<Integer>> kMerPositions = new HashMap<>();
-        for (String kmer : kMers) {
-            List<Integer> positions = new ArrayList<>();
-            int index = genome.indexOf(kmer);
-            while (index >= 0) {
-                positions.add(index);
-                index = genome.indexOf(kmer, index + 1);
+    public static List<Kmer> findKMerPositions(String genome, List<String> kMers, int k) {
+        List<Kmer> kmerPositions = new ArrayList<>();
+        Set<String> kmerSet = new HashSet<>(kMers); // Use a HashSet for faster lookups
+
+        // Slide through the genome with a window of size k
+        for (int i = 0; i <= genome.length() - k; i++) {
+            String fragment = genome.substring(i, i + k);
+
+            // Check if the fragment is in the kMers list
+            if (kmerSet.contains(fragment)) {
+                kmerPositions.add(new Kmer(fragment, i));
             }
-            kMerPositions.put(kmer, positions);
-            System.out.println(kmer + "(" + positions + ")"); // DEBUG
         }
-        return kMerPositions;
+
+        return kmerPositions; // Already in sorted order based on position
     }
 }
