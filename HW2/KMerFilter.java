@@ -28,8 +28,23 @@ public class KMerFilter {
         return filteredKMers;
     }
     
-    private static boolean overlaps(String kmer1, String kmer2, int k) {
-        int overlap = (k + 1) / 2; // Define "overlapping" condition
-        return kmer1.substring(k - overlap).equals(kmer2.substring(0, overlap));
+    public static boolean overlaps(String kmer1, String kmer2, int k) {
+        int overlapLength = (k + 1) / 2; // Minimum overlap length
+
+        for (int i=0; i < overlapLength; i++) {
+            for (int j=0; j < overlapLength; j++) {
+                String kmer1Fragment = kmer1.substring(i, i+overlapLength);
+                String kmer2Fragment = kmer2.substring(j, j+overlapLength);
+                // System.out.println(overlapLength);
+                // System.out.println(kmer1Fragment);
+                // System.out.println(kmer2Fragment);
+                if (kmer1Fragment.equals(kmer2Fragment)) {
+                    System.out.println(kmer1.substring(i, i+overlapLength));
+                    return true;
+                }
+            }
+        }
+
+        return false; // No overlap found
     }
 }
