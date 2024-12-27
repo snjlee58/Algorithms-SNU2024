@@ -8,13 +8,4 @@ class LCSKmer {
         this.positionGenome1 = positionGenome1;
         this.positionGenome2 = positionGenome2;
     }
-
-    @Override
-    public String toString() {
-        return "LCSKmer{" +
-                "value='" + value + '\'' +
-                ", positionGenome1=" + positionGenome1 +
-                ", positionGenome2=" + positionGenome2 +
-                '}';
-    }
 }

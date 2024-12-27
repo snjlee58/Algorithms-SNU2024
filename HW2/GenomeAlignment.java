@@ -1,5 +1,6 @@
 import java.util.*;
 import java.io.*;
+import java.nio.file.*;
 
 public class GenomeAlignment {
     public static void main(String[] args) {
@@ -8,49 +9,43 @@ public class GenomeAlignment {
         }
 
         int k = Integer.parseInt(args[0]);
-        String genome1KmerFile = args[1];
-        String genome2KmerFile = args[2];
-        String genome1File = args[3];
-        String genome2File = args[4];
-        String genome1Name = removeFastaExtension(genome1File); 
-        String genome2Name = removeFastaExtension(genome2File);
+        String genome1TopNKmerFile = args[1];
+        String genome2TopNKmerFile = args[2];
+        String genome1FilePath = args[3];
+        String genome2FilePath = args[4];
+        String genome1Filename = getFileName(genome1FilePath); 
+        String genome2Filename = getFileName(genome2FilePath);
 
         try {
             // Step 1: Frequent k-mer 추출
-            Map<String, Integer> genome1Kmers = parseKmerFile(genome1KmerFile);
-            Map<String, Integer> genome2Kmers = parseKmerFile(genome2KmerFile);
+            Map<String, Integer> genome1KmerCounts = parseKmerFile(genome1TopNKmerFile);
+            Map<String, Integer> genome2KmerCounts = parseKmerFile(genome2TopNKmerFile);
 
             // Step 2: k-mer 필터링
             // Parse genome sequences -> get sequence as string
-            String genome1 = readGenome(genome1File);
-            String genome2 = readGenome(genome2File);
+            String genome1 = readGenome(genome1FilePath);
+            String genome2 = readGenome(genome2FilePath);
             // Genome size
             int genome1Size = genome1.length();
             int genome2Size = genome2.length();
-            List<String> filteredGenome1KMers = KMerFilter.filterKMers(genome1Kmers, k, genome1Size);
-            List<String> filteredGenome2KMers = KMerFilter.filterKMers(genome2Kmers, k, genome2Size);
-            // System.out.println(filteredGenome1KMers);
-            // System.out.println(filteredGenome1KMers.size());
-            // System.out.println(filteredGenome2KMers);
-            // System.out.println(filteredGenome2KMers.size());
+            // Filter Kmers
+            List<String> filteredGenome1KMers = KMerFilter.filterKMers(genome1KmerCounts, k, genome1Size);
+            List<String> filteredGenome2KMers = KMerFilter.filterKMers(genome2KmerCounts, k, genome2Size);
 
             // Step 3: k-mer의 발생 위치 검색
             List<Kmer> genome1KmerPositions = KMerLocator.findKMerPositions(genome1, filteredGenome1KMers, k);
             List<Kmer> genome2KmerPositions = KMerLocator.findKMerPositions(genome2, filteredGenome2KMers, k);
-            // for (Kmer kmer : genome2KmerPositions) {
-            //     System.out.println(kmer.value + "|" + kmer.position);
-            // }
 
-            // // Step 4: Dynamic Programming으로 LCS 계산
+            // Step 4: Dynamic Programming으로 LCS 계산
             List<LCSKmer> lcs = LCS.findLCS(genome1KmerPositions, genome2KmerPositions);
 
             // Step 5: 결과물 저장
-            saveResults(k, lcs, genome1Name, genome2Name);
+            saveResults(k, lcs, genome1Filename, genome2Filename);
 
         } catch (Exception e) {
-            e.printStackTrace();
-        }         
-
+            // e.printStackTrace();
+            return;
+        }
     }
 
     // Step 1: Parse k-mer file
@@ -64,7 +59,6 @@ public class GenomeAlignment {
             int count = Integer.parseInt(parts[1]);
             kmerCounts.put(kmer, count);
 
-            // System.out.println(kmer + count);
         }
         br.close();
         return kmerCounts;
@@ -101,11 +95,11 @@ public class GenomeAlignment {
     }
 
      // Step 5: Method to save results to a file
-    public static void saveResults(int k, List<LCSKmer> lcs, String genome1Name, String genome2Name) throws IOException {
+    public static void saveResults(int k, List<LCSKmer> lcs, String genome1Filename, String genome2Filename) throws IOException {
         // Save LCS sequence as a text file
         String studentId = "2020-16634";
-        String lcsFile = studentId + "_" + k + "_" + genome1Name + "_" + genome2Name + "_LCS.txt";
-        try (FileWriter writer = new FileWriter(lcsFile)) {
+        String lcsOutputFile = studentId + "_" + k + "_" + genome1Filename + "_" + genome2Filename + "_LCS.txt";
+        try (FileWriter writer = new FileWriter(lcsOutputFile)) {
             StringBuilder lcsSequence = new StringBuilder();
             for (LCSKmer kmer : lcs) {
                 lcsSequence.append(kmer.value).append("-");
@@ -118,39 +112,28 @@ public class GenomeAlignment {
         }
 
         // Save LCS k-mers and positions to a CSV file
-        String outputFile1 = studentId + "_" + k + "_" + genome1Name + "_LCS_positions.csv";
-        try (FileWriter writer = new FileWriter(outputFile1)) {
+        String genome1LcsPositionsOutputFile = studentId + "_" + k + "_" + genome1Filename + "_LCS_positions.csv";
+        try (FileWriter writer = new FileWriter(genome1LcsPositionsOutputFile)) {
             writer.write("LCS k-mer,Position\n");
             for (LCSKmer kmer : lcs) {
-                // int position = getKmerPosition(genome1KmerPositions, kmer);
-                writer.write(kmer.value + "," + kmer.positionGenome1 + "\n");
+                int oneBasedIdx = kmer.positionGenome1 + 1;
+                writer.write(kmer.value + "," + oneBasedIdx + "\n");
             }
         }
 
-        String outputFile2 = studentId + "_" + k + "_" + genome2Name + "_LCS_positions.csv";
-        try (FileWriter writer = new FileWriter(outputFile2)) {
+        String genome2LcsPositionsOutputFile = studentId + "_" + k + "_" + genome2Filename + "_LCS_positions.csv";
+        try (FileWriter writer = new FileWriter(genome2LcsPositionsOutputFile)) {
             writer.write("LCS k-mer,Position\n");
             for (LCSKmer kmer : lcs) {
-                // int position = getKmerPosition(genome2KmerPositions, kmer);
-                writer.write(kmer.value + "," + kmer.positionGenome2 + "\n");
+                int oneBasedIdx = kmer.positionGenome2 + 1;
+                writer.write(kmer.value + "," + oneBasedIdx + "\n");
             }
         }
     }
     
-    public static String removeFastaExtension(String fileName) {
-        if (fileName.endsWith(".fasta")) {
-            return fileName.substring(0, fileName.lastIndexOf(".fasta"));
-        }
-        return fileName; // Return the original string if it doesn't end with ".fasta"
-    }
-
-    public static int getKmerPosition(List<Kmer> kmerList, String key) {
-        for (Kmer kmer : kmerList) {
-            if (kmer.value.equals(key)) { // Check if the Kmer's value matches the key
-                return kmer.position; // Return the position if found
-            }
-        }
-        return -1; // Return -1 if no match is found
-    }
-    
+    public static String getFileName(String path) {
+        String filename = Paths.get(path).getFileName().toString();
+        filename = filename.substring(0, filename.lastIndexOf('.'));
+        return filename;
+    }  
 }

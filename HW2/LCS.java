@@ -30,7 +30,6 @@ public class LCS {
                         genome1.get(i - 1).value,
                         genome1.get(i - 1).position,
                         genome2.get(j - 1).position));
-
                 i--;
                 j--;
             } else if (dp[i - 1][j] > dp[i][j - 1]) {
@@ -42,7 +41,7 @@ public class LCS {
 
         // Reverse the list because we added elements in reverse order during backtracking
         Collections.reverse(lcs);
-        System.out.println("LCS length=" + lcs.size()); // DEBUG
+        // System.out.println("LCS length=" + lcs.size()); // DEBUG
         return lcs;
     }
 }
